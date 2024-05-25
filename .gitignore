@@ -1,0 +1,36 @@
+# Python cache files
+*.pyc
+__pycache__/
+
+# Virtual environment
+venv/
+env/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Uploads directory
+/uploads/
+
+# Environment variables file
+.env
+
+# Logs
+*.log
+
+# Ignore IDE specific files
+.vscode/
+.idea/
+*.swp
+
+# Ignore all files in any directory named test
+**/test/
+**/Test/
+
+# Ignore all files in any directory named train
+**/train/
+**/Train/
+
+# Ignore all the models except those in BestModels
+*.keras
+!BestModels/*.keras

@@ -8,7 +8,8 @@ import os
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
-
+from sklearn.preprocessing import StandardScaler
+import json
 
 app = Flask(__name__)
 
@@ -99,8 +100,10 @@ models = {}
 models["catboost"] = load("LaptopPrice/Catboost.joblib")
 models["lightgbm"] = load("LaptopPrice/Lightgbm.joblib")
 preprocessor = load("LaptopPrice/preprocessor.joblib")
-@app.route('/price',methods=["Post"])
-def predictPrice():
+
+#Laptop Price Prediction
+@app.route('/price/Laptop',methods=["Post"])
+def predictPriceLaptop():
     columns = ['brand', 'processor_brand', 'processor_name', 'processor_gnrtn', 'ram_gb', 'ram_type', 'ssd', 'hdd', 'os', 'os_bit', 'graphic_card_gb', 'weight', 'warranty', 'Touchscreen', 'msoffice', 'rating', 'Number of Ratings', 'Number of Reviews']
     body = request.get_json()
     extracted_data = [body.get(column, None) for column in columns]
@@ -110,6 +113,38 @@ def predictPrice():
     pred2 = models['lightgbm'].predict(X)
     final =  pred1*0.5+pred2*0.5
     return jsonify({"Price": final[0]})   
+
+
+models["Mobile"] = load("MobilePrice/MobilePriceModel.joblib")
+scaler = load("MobilePrice/scaler.joblib")
+with open('MobilePrice/brands.json', 'r') as json_file:
+    brands_str = json_file.read()
+    brands_dict = json.loads(brands_str)
+with open('MobilePrice/models.json', 'r') as json_file:
+    models_str = json_file.read()
+    models_dict = json.loads(models_str)    
+#Mobile Price Prediction
+@app.route('/price/Mobile',methods=["Post"])
+def predictPriceMobile():
+    body = request.get_json()
+    if body["Model"] in models_dict:
+        body["Model"] = models_dict[body["Model"]]
+    else:
+        body["Model"] = models_dict["OTHER"]
+        
+    if body["Brand"] in brands_dict:
+        body["Brand"] = brands_dict[body["Brand"]]
+    else:
+        body["Brand"] = brands_dict["OTHER"]
+    
+    keys = ["Brand","Model","Storage","RAM","Screen Size","Battery","Camera"]
+    values_list = [body[key] for key in keys]
+    x = np.array([values_list],dtype=float)
+    print(x)
+    x = scaler.transform(x)      
+    y = models["Mobile"].predict(x)  
+    print(y[0])  
+    return(jsonify({"Price":round(float(y[0]))}))
 
 if __name__ == '__main__':
     app.run(debug=True)

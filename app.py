@@ -1,7 +1,10 @@
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
+import pandas as pd 
+from TransformationPipeline import TransformationPipeline
+from LogScaling import LogScaling
+from joblib import dump, load
 import os
-from PIL import Image
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
@@ -54,7 +57,7 @@ def sub_classify(main_class,img):
         return {"main_class": main_class}
 
 
-# Define a route to handle image upload and classification
+#Image Classification
 @app.route('/classify', methods=['POST'])
 def classify_image():
     if 'file' not in request.files:
@@ -90,6 +93,23 @@ def classify_image():
         os.remove(file_path)
         
         return jsonify(result)
+
+
+models = {}
+models["catboost"] = load("LaptopPrice/Catboost.joblib")
+models["lightgbm"] = load("LaptopPrice/Lightgbm.joblib")
+preprocessor = load("LaptopPrice/preprocessor.joblib")
+@app.route('/price',methods=["Post"])
+def predictPrice():
+    columns = ['brand', 'processor_brand', 'processor_name', 'processor_gnrtn', 'ram_gb', 'ram_type', 'ssd', 'hdd', 'os', 'os_bit', 'graphic_card_gb', 'weight', 'warranty', 'Touchscreen', 'msoffice', 'rating', 'Number of Ratings', 'Number of Reviews']
+    body = request.get_json()
+    extracted_data = [body.get(column, None) for column in columns]
+    X = pd.DataFrame([extracted_data],columns=columns)
+    X = preprocessor.transform(X)
+    pred1 = models['catboost'].predict(X)
+    pred2 = models['lightgbm'].predict(X)
+    final =  pred1*0.5+pred2*0.5
+    return jsonify({"Price": final[0]})   
 
 if __name__ == '__main__':
     app.run(debug=True)

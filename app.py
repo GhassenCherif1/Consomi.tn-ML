@@ -17,25 +17,26 @@ app = Flask(__name__)
 main_model = tf.keras.models.load_model('BestModels/CategoryModelV2.keras')
 
 sub_models ={}
-def sub_classify(main_class,img):
+def sub_classify(main_class,img,image384):
     
     if(main_class == "Furniture"):
         sub_models["Furniture"] = tf.keras.models.load_model('BestModels/FurnitureModel.keras')
         predictions = sub_models["Furniture"].predict(img)
         class_names = ["Bed","Chair","Sofa","SwivelChair","Table"]
-        max = np.argmax(predictions[0])
-        predicted_class = class_names[max]
+        i_max = np.argmax(predictions[0])
+        predicted_class = class_names[i_max]
         return {"main_class" : "Furniture" , "sub_class": predicted_class}
     
     elif main_class == 'It':
         sub_models["It"] = tf.keras.models.load_model('BestModels/ItModelV1.keras')
         predictions = sub_models["It"].predict(img)
         class_names = ["Laptop","Printer","Samrtphone","Tv"]
-        max = np.argmax(predictions[0])
-        if(max<0.8):
+        i_max = np.argmax(predictions[0])
+        max = np.max(predictions[0])
+        if(max<0.6):
             predicted_class = "Other"
         else:
-            predicted_class = class_names[max]
+            predicted_class = class_names[i_max]
         return {"main_class" : "It" , "sub_class": predicted_class}
     
     elif main_class == 'Jewellery':
@@ -51,7 +52,10 @@ def sub_classify(main_class,img):
     
     elif main_class == 'Animal':
         sub_models[main_class] = tf.keras.models.load_model('BestModels/AnimalModel.keras')
-        predictions = sub_models[main_class].predict(img)
+        img_array = tf.keras.preprocessing.image.img_to_array(image384)
+        img_array = np.expand_dims(img_array, axis=0)
+        img_array = tf.keras.applications.efficientnet_v2.preprocess_input(img_array)
+        predictions = sub_models[main_class].predict(img_array)
         decoded_prediction = tf.keras.applications.efficientnet_v2.decode_predictions(predictions, top=5)[0]
         return {"main_class" : "Animal" , "sub_class": decoded_prediction[0][1]}
     else:
@@ -78,18 +82,20 @@ def classify_image():
         image = load_img(file_path, target_size=(224,224))
         image_array = img_to_array(image)
         image_array = np.expand_dims(image_array, axis=0)
-        image_array = image_array / 255
+        image_array = image_array / 255       
 
+        image384 = load_img(file_path, target_size=(384,384))
         # Make predictions
         predictions = main_model.predict(image_array)
         class_names = ["Animal","Car","Clothe","Furniture","It","Jewellery"]
-        max = np.argmax(predictions[0])
-        if(max<0.7):
+        i_max = np.argmax(predictions[0])
+        max= np.max(predictions[0])
+        if(max<0.6):
             predicted_class = "Other"
         else:
-            predicted_class = class_names[max]
+            predicted_class = class_names[i_max]
         
-        result = sub_classify(predicted_class,image_array)
+        result = sub_classify(predicted_class,image_array,image384)
         
         os.remove(file_path)
         

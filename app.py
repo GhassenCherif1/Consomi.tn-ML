@@ -87,10 +87,11 @@ def classify_image():
         image384 = load_img(file_path, target_size=(384,384))
         # Make predictions
         predictions = main_model.predict(image_array)
+        print(predictions)
         class_names = ["Animal","Car","Clothe","Furniture","It","Jewellery"]
         i_max = np.argmax(predictions[0])
         max= np.max(predictions[0])
-        if(max<0.6):
+        if(max<0.69):
             predicted_class = "Other"
         else:
             predicted_class = class_names[i_max]

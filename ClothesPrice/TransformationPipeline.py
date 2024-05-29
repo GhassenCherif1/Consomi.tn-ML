@@ -3,7 +3,6 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
-from LogScaling import LogScaling
 class TransformationPipeline:
 
     def __init__(self) -> None:
@@ -11,7 +10,7 @@ class TransformationPipeline:
     
     def preprocess(self,d):
         cat_cols = d.select_dtypes('object').columns
-        num_cols = d.select_dtypes(include=['float64',"int64"]).columns
+        num_cols = ["R"]
 
         num_pipeline= Pipeline(
             steps=[
@@ -29,7 +28,6 @@ class TransformationPipeline:
         )
 
         preprocessor = ColumnTransformer([
-            ("log_transform", LogScaling(), num_cols),
             ("num_pipeline", num_pipeline, num_cols),
             ("cat_pipelines",cat_pipeline,cat_cols)
             ], remainder= 'passthrough')

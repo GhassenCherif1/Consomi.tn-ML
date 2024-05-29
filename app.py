@@ -10,6 +10,7 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from sklearn.preprocessing import StandardScaler
 import json
+import webcolors
 
 app = Flask(__name__)
 
@@ -113,11 +114,11 @@ def classify_image():
         
         return jsonify(result)
 
-
+preprocessor = {}
 models = {}
-models["catboost"] = load("LaptopPrice/Catboost.joblib")
-models["lightgbm"] = load("LaptopPrice/Lightgbm.joblib")
-preprocessor = load("LaptopPrice/preprocessor.joblib")
+models["Lpatopcatboost"] = load("LaptopPrice/Catboost.joblib")
+models["Laptoplightgbm"] = load("LaptopPrice/Lightgbm.joblib")
+preprocessor["Laptop"] = load("LaptopPrice/LaptopPreprocessor.joblib")
 
 #Laptop Price Prediction
 @app.route('/price/Laptop',methods=["Post"])
@@ -126,9 +127,9 @@ def predictPriceLaptop():
     body = request.get_json()
     extracted_data = [body.get(column, None) for column in columns]
     X = pd.DataFrame([extracted_data],columns=columns)
-    X = preprocessor.transform(X)
-    pred1 = models['catboost'].predict(X)
-    pred2 = models['lightgbm'].predict(X)
+    X = preprocessor["Laptop"].transform(X)
+    pred1 = models['Laptopcatboost'].predict(X)
+    pred2 = models['Laptoplightgbm'].predict(X)
     final =  pred1*0.5+pred2*0.5
     return jsonify({"Price": final[0]})   
 
@@ -163,6 +164,32 @@ def predictPriceMobile():
     y = models["Mobile"].predict(x)  
     print(y[0])  
     return(jsonify({"Price":round(float(y[0]))}))
+
+
+models["Clothescatboost"] = load("ClothesPrice/Catboost.joblib")
+preprocessor["Clothes"] = load("ClothesPrice/ClothesPreprocessor.joblib")
+#Clothes Price Prediction
+@app.route('/price/Clothes',methods=["Post"])
+def predictPriceClothe():
+    columns = ["marka","naw3","9at3a","khochn","toul","3ordh","R","G","B"]
+    body = request.get_json()
+    color_name = body["color"]
+    rgb_value = webcolors.name_to_rgb(color_name)
+    R = rgb_value[0]
+    G = rgb_value[1]
+    B = rgb_value[2]
+    body["R"] = R
+    body["G"] = G
+    body["B"] = B
+    del body["color"]
+    extracted_data = [body.get(column, None) for column in columns]
+    X = pd.DataFrame([extracted_data],columns=columns)
+    X = preprocessor["Clothes"].transform(X)
+    pred = models['Clothescatboost'].predict(X)
+    return jsonify({"Price": pred[0]})   
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

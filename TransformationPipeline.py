@@ -11,7 +11,7 @@ class TransformationPipeline:
     
     def preprocess(self,d):
         cat_cols = d.select_dtypes('object').columns
-        num_cols = ['Number of Ratings', 'Number of Reviews']
+        num_cols = d.select_dtypes(include=['float64',"int64",'float32']).columns
 
         num_pipeline= Pipeline(
             steps=[

@@ -58,6 +58,17 @@ def sub_classify(main_class,img,image384):
         predictions = sub_models[main_class].predict(img_array)
         decoded_prediction = tf.keras.applications.efficientnet_v2.decode_predictions(predictions, top=5)[0]
         return {"main_class" : "Animal" , "sub_class": decoded_prediction[0][1]}
+    elif main_class == "Clothe":
+        sub_models["Clothe"] = tf.keras.models.load_model('BestModels/ClothesModelV1.keras')
+        predictions = sub_models["Clothe"].predict(img)
+        class_names = ["Dress","Jacket","Pants","Shoes","Short","Suit","Sunglasses","T_shirt","Watch"]
+        i_max = np.argmax(predictions[0])
+        max = np.max(predictions[0])
+        if(max<0.6):
+            predicted_class = "Other"
+        else:
+            predicted_class = class_names[i_max]
+        return {"main_class" : "Clothe" , "sub_class": predicted_class}
     else:
         return {"main_class": main_class}
 

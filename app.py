@@ -189,6 +189,15 @@ def predictPriceClothe():
     return jsonify({"Price": pred[0]})   
 
 
+models["CarPrice"] = load('CarsPrice/car_price_model_pipeline.joblib')
+#Clothes Price Prediction
+@app.route('/price/Cars',methods=["Post"])
+def predictPriceCar():
+    body = request.get_json()
+    df = pd.DataFrame([body])
+    prediction = models["CarPrice"].predict(df)
+    print(round(prediction[0]))
+    return jsonify({'price': round(prediction[0])})
 
 
 if __name__ == '__main__':

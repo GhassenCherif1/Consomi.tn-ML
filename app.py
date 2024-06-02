@@ -116,7 +116,7 @@ def classify_image():
 
 preprocessor = {}
 models = {}
-models["Lpatopcatboost"] = load("LaptopPrice/Catboost.joblib")
+models["Laptopcatboost"] = load("LaptopPrice/Catboost.joblib")
 models["Laptoplightgbm"] = load("LaptopPrice/Lightgbm.joblib")
 preprocessor["Laptop"] = load("LaptopPrice/LaptopPreprocessor.joblib")
 
@@ -131,7 +131,7 @@ def predictPriceLaptop():
     pred1 = models['Laptopcatboost'].predict(X)
     pred2 = models['Laptoplightgbm'].predict(X)
     final =  pred1*0.5+pred2*0.5
-    return jsonify({"Price": final[0]})   
+    return jsonify({"Price": final[0]*0.037})   
 
 
 models["Mobile"] = load("MobilePrice/MobilePriceModel.joblib")
@@ -146,13 +146,15 @@ with open('MobilePrice/models.json', 'r') as json_file:
 @app.route('/price/Mobile',methods=["Post"])
 def predictPriceMobile():
     body = request.get_json()
-    if body["Model"] in models_dict:
-        body["Model"] = models_dict[body["Model"]]
+    print(body["Brand"].upper())
+    print(brands_dict[body["Brand"].upper()])
+    if body["Model"].upper() in models_dict:
+        body["Model"] = models_dict[body["Model"].upper()]
     else:
         body["Model"] = models_dict["OTHER"]
         
-    if body["Brand"] in brands_dict:
-        body["Brand"] = brands_dict[body["Brand"]]
+    if body["Brand"].upper() in brands_dict:
+        body["Brand"] = brands_dict[body["Brand"].upper()]
     else:
         body["Brand"] = brands_dict["OTHER"]
     
@@ -163,7 +165,7 @@ def predictPriceMobile():
     x = scaler.transform(x)      
     y = models["Mobile"].predict(x)  
     print(y[0])  
-    return(jsonify({"Price":round(float(y[0]))}))
+    return(jsonify({"Price":round(float(y[0]*3.1))}))
 
 
 models["Clothescatboost"] = load("ClothesPrice/Catboost.joblib")

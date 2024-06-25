@@ -131,7 +131,7 @@ def predictPriceLaptop():
     pred1 = models['Laptopcatboost'].predict(X)
     pred2 = models['Laptoplightgbm'].predict(X)
     final =  pred1*0.5+pred2*0.5
-    return jsonify({"Price": final[0]*0.037})   
+    return jsonify({"Price": final[0]*0.02})   
 
 
 models["Mobile"] = load("MobilePrice/MobilePriceModel.joblib")
